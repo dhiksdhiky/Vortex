@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Vortex Sniffer",
+  "version": "2.3.0",
+  "description": "Standalone 3-layer media sniffer, IG/FB/Threads/YouTube/Drive extractor, and in-browser fMP4/HLS downloader.",
+  "permissions": [
+    "webRequest",
+    "cookies",
+    "storage",
+    "activeTab",
+    "scripting",
+    "tabs",
+    "downloads",
+    "unlimitedStorage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Vortex Sniffer"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["mse-hook.js"],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["muxer.js", "content.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ]
+}

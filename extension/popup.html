@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vortex Sniffer</title>
+  <style>
+    :root {
+      --bg: #0c1016;
+      --surface: #131922;
+      --elevated: #1b2330;
+      --border: #283548;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #0ea5e9;
+      --accent-hover: #0284c7;
+      --success: #22c55e;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      width: 420px;
+      min-height: 360px;
+      max-height: 580px;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    button, select, input[type="checkbox"] {
+      cursor: pointer;
+      font-family: inherit;
+    }
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .hidden { display: none !important; }
+
+    header {
+      padding: 10px 12px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: rgba(14, 165, 233, 0.16);
+      color: #38bdf8;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .brand-text { min-width: 0; }
+    .brand-text h1 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .detect-summary {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #38bdf8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .btn {
+      height: 30px;
+      padding: 0 11px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .btn-sm { height: 26px; padding: 0 8px; font-size: 11px; }
+    .btn-icon { width: 26px; padding: 0; }
+    .btn-icon.active {
+      border-color: var(--accent);
+      background: rgba(14, 165, 233, 0.16);
+      color: #38bdf8;
+    }
+    .toggle-pill {
+      background: var(--elevated);
+      border-color: var(--border);
+      color: var(--muted);
+      padding: 0 8px;
+      gap: 5px;
+    }
+    .toggle-pill .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #64748b;
+      flex-shrink: 0;
+    }
+    .toggle-pill.is-on {
+      background: rgba(34, 197, 94, 0.14);
+      border-color: rgba(34, 197, 94, 0.45);
+      color: #86efac;
+    }
+    .toggle-pill.is-on .dot {
+      background: #22c55e;
+      box-shadow: 0 0 6px rgba(34, 197, 94, 0.65);
+    }
+    .btn-primary { background: var(--accent); color: #ffffff; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-secondary { background: var(--elevated); border-color: var(--border); color: var(--text); }
+    .btn-secondary:hover:not(:disabled) { border-color: #475569; }
+    .btn-danger { background: rgba(239, 68, 68, 0.14); border-color: rgba(239, 68, 68, 0.38); color: #fca5a5; }
+
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .cards-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .empty-box {
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 24px 14px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .video-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .card-body {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .thumb-wrap {
+      position: relative;
+      width: 112px;
+      height: 64px;
+      border-radius: 6px;
+      background: #090d12;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .thumb-fallback {
+      color: #475569;
+    }
+    .badge-platform {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(12, 16, 22, 0.85);
+      color: #38bdf8;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .badge-duration {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(12, 16, 22, 0.85);
+      color: #f8fafc;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .btn-play-preview {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      background: rgba(12, 16, 22, 0.78);
+      color: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .btn-play-preview:hover {
+      background: var(--accent);
+      border-color: #ffffff;
+    }
+    .inline-preview-box {
+      position: relative;
+      background: #000000;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .inline-preview-video {
+      width: 100%;
+      max-height: 190px;
+      display: block;
+    }
+    .btn-close-preview {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 0;
+      background: rgba(0, 0, 0, 0.72);
+      color: #ffffff;
+      font-weight: 700;
+    }
+    .card-meta {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .card-author-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .card-author {
+      font-size: 11px;
+      font-weight: 600;
+      color: #38bdf8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card-title {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      word-break: break-word;
+    }
+    .card-controls {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    select {
+      flex: 1;
+      min-width: 0;
+      height: 30px;
+      padding: 0 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .mse-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .mse-text {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .mse-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #cbd5e1;
+    }
+    .mse-size {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .mse-btns {
+      display: flex;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .feedback {
+      margin: 0;
+      min-height: 16px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .feedback.ok { color: var(--success); }
+    .feedback.err { color: #f87171; }
+
+    .off-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 16px 14px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .off-title {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .off-desc {
+      margin: 0;
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .settings-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .settings-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    .settings-head h2 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .field-group label, .settings-row label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+    .field-group input[type="text"],
+    .field-group input[type="number"],
+    .field-group select {
+      height: 30px;
+      padding: 0 9px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--elevated);
+      color: var(--text);
+      font-size: 12px;
+      font-family: inherit;
+    }
+    .field-hint {
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .settings-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .settings-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .settings-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      padding-top: 4px;
+      border-top: 1px solid var(--border);
+    }
+    footer {
+      padding: 8px 12px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .footer-meta {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand-row">
+      <div class="brand-icon" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M12 3V14M12 14L7.5 9.5M12 14L16.5 9.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5 17.5C5 18.8807 6.11929 20 7.5 20H16.5C17.8807 20 19 18.8807 19 17.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>Vortex Sniffer</h1>
+        <span id="detect-summary" class="detect-summary">Memindai tab...</span>
+      </div>
+    </div>
+
+    <div class="header-actions" role="toolbar" aria-label="Kontrol utama Vortex">
+      <button
+        type="button"
+        id="btn-domain-toggle"
+        class="btn btn-sm toggle-pill"
+        role="switch"
+        aria-checked="false"
+        aria-label="Toggle Vortex ON atau OFF di domain ini"
+        title="Aktif atau nonaktifkan Vortex di domain ini"
+      >
+        <span class="dot" aria-hidden="true"></span>
+        <span id="domain-toggle-label">OFF</span>
+      </button>
+      <button type="button" id="btn-scan" class="btn btn-secondary btn-sm">Scan</button>
+      <button type="button" id="btn-clear" class="btn btn-secondary btn-sm">Clear</button>
+      <button
+        type="button"
+        id="btn-settings"
+        class="btn btn-secondary btn-sm btn-icon"
+        aria-label="Settings"
+        aria-expanded="false"
+        title="Settings"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="2"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.08a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.08a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section id="settings-panel" class="settings-panel hidden" aria-label="Pengaturan Vortex">
+      <div class="settings-head">
+        <h2>Settings</h2>
+        <button type="button" id="btn-close-settings" class="btn btn-secondary btn-sm">Tutup</button>
+      </div>
+
+      <div class="field-group">
+        <label for="set-subfolder">Folder Download (Subfolder di Downloads)</label>
+        <input type="text" id="set-subfolder" placeholder="Vortex (kosongkan = langsung di Downloads)">
+        <span class="field-hint">File disimpan ke Downloads/&lt;subfolder&gt;/</span>
+      </div>
+
+      <div class="settings-row">
+        <input type="checkbox" id="set-auto-category">
+        <label for="set-auto-category">Pisahkan otomatis ke subfolder Video dan Audio</label>
+      </div>
+
+      <div class="settings-row">
+        <input type="checkbox" id="set-save-as">
+        <label for="set-save-as">Selalu tanya lokasi simpan tiap download (Save As)</label>
+      </div>
+
+      <div class="field-group">
+        <label for="set-hover-quality">Kualitas default saat klik tombol Hover</label>
+        <select id="set-hover-quality">
+          <option value="best">Terbaik (Otomatis)</option>
+          <option value="1080p">Maksimal 1080p</option>
+          <option value="720p">Maksimal 720p</option>
+          <option value="480p">Maksimal 480p</option>
+          <option value="audio">Audio Saja (M4A/MP3)</option>
+        </select>
+      </div>
+
+      <div class="settings-grid-2">
+        <div class="field-group">
+          <label for="set-parallel">Koneksi HLS (1-16)</label>
+          <input type="number" id="set-parallel" min="1" max="16" value="6">
+        </div>
+        <div class="field-group">
+          <label for="set-max-history">Limit Riwayat (5-50)</label>
+          <input type="number" id="set-max-history" min="5" max="50" value="15">
+        </div>
+      </div>
+
+      <div class="settings-actions">
+        <button type="button" id="btn-reset-settings" class="btn btn-secondary btn-sm">Reset Default</button>
+        <button type="button" id="btn-save-settings" class="btn btn-primary btn-sm">Simpan</button>
+      </div>
+    </section>
+
+    <div id="main-view">
+      <div id="off-notice" class="off-box hidden">
+        <p class="off-title">Vortex sedang OFF di <strong id="off-domain-name">domain ini</strong></p>
+        <p class="off-desc">Web baru otomatis OFF agar Chrome ringan dan ikon hover nonaktif. Klik ON untuk mengaktifkan, atau Scan untuk memeriksa halaman ini.</p>
+        <button type="button" id="btn-enable-now" class="btn btn-primary btn-sm">Aktifkan (ON)</button>
+      </div>
+
+      <div id="cards-list" class="cards-list">
+        <div class="empty-box">Mendeteksi video di halaman aktif...</div>
+      </div>
+
+      <section id="mse-bar" class="mse-bar" aria-label="Perekam Buffer MSE untuk video blob terkunci">
+        <div class="mse-text">
+          <span class="mse-label">Buffer MSE (blob:)</span>
+          <span id="mse-status-label" class="mse-size">Hemat RAM (aktif hanya saat Rekam MSE)</span>
+        </div>
+        <div class="mse-btns">
+          <button type="button" id="btn-mse-toggle" class="btn btn-secondary btn-sm">Rekam MSE</button>
+          <button type="button" id="btn-mse-save" class="btn btn-primary btn-sm">Simpan MP4</button>
+          <button type="button" id="btn-mse-clear" class="btn btn-danger btn-sm">Reset</button>
+        </div>
+      </section>
+    </div>
+
+    <p id="popup-feedback" class="feedback" role="status" aria-live="polite"></p>
+  </main>
+
+  <footer>
+    <span id="footer-domain-info" class="footer-meta">Domain: - | Status: OFF</span>
+  </footer>
+
+  <script src="muxer.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
