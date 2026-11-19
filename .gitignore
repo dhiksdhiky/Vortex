@@ -5,6 +5,9 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Local share / unpack build output
+dist/
+
 # Extension packaging artifacts
 *.crx
 *.pem
