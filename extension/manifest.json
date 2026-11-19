@@ -3,6 +3,12 @@
   "name": "Vortex Sniffer",
   "version": "2.3.0",
   "description": "Standalone 3-layer media sniffer, IG/FB/Threads/YouTube/Drive extractor, and in-browser fMP4/HLS downloader.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "permissions": [
     "webRequest",
     "cookies",
@@ -21,7 +27,13 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Vortex Sniffer"
+    "default_title": "Vortex Sniffer",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   },
   "content_scripts": [
     {

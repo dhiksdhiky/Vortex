@@ -38,6 +38,7 @@
 ```text
 Vortex/
 ├── extension/
+│   ├── icons/           # Ikon ekstensi Vortex Blade (16/32/48/128 PNG)
 │   ├── manifest.json    # Konfigurasi Manifest V3 (v2.3.0)
 │   ├── background.js    # Network sniffer whitelist-gated & browser download router
 │   ├── mse-hook.js      # Ekstraktor React Fiber / Player API & perekam MSE on-demand
